@@ -1,0 +1,7 @@
+pip install flask
+pip install flask_sqlalchemy
+pip install flask_login
+pip install yfinance
+pip install apscheduler
+pip install matplotlib
+pip install seaborn
