@@ -282,9 +282,9 @@ def show_calculations(symbol):
 
         return render_template("calculations.html", user=current_user, symbol=symbol, dcf_value=dcf_value,
                                eps_value=eps_value, ebitda_value=ebitda_value, current_price = current_price,
-                               ebitda_margin = ebitda_margin*100, revenue_growth_rate = revenue_growth_rate*100, net_margin = net_margin*100, fcf_margin = fcf_margin*100 ,
+                               ebitda_margin = round(ebitda_margin*100,2), revenue_growth_rate = round(revenue_growth_rate*100,2), net_margin = round(net_margin*100,2), fcf_margin = round(fcf_margin*100,2) ,
                                future_pe = future_pe,future_ev_ebitda = future_ev_ebitda,
-                               future_pfcf = future_pfcf, shares_growth = shares_growth * 100, ror = ror*100, num_of_years = num_of_years,
+                               future_pfcf = future_pfcf, shares_growth = round(shares_growth * 100,2), ror = round(ror*100,2), num_of_years = num_of_years,
                                current_pe = round(current_pe,2),current_ev_to_ebitda =round(current_ev_to_ebitda,2),current_pfcf = round(current_pfcf,2),
                                current_net_margin = round(current_net_margin * 100,2), current_ebitda_margin = round(current_ebitda_margin * 100,2),current_fcf_margin = round(current_fcf_margin * 100,2),
                                revenue_growth_rate_percentage= revenue_growth_rate_percentage)
