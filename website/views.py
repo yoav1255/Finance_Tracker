@@ -24,44 +24,57 @@ def update_portfolio_stock(stock):
     stock.average_price = 0
     stock.amount_stocks = 0
     for holding in stock.holdings:
+        print(holding)
         stock.average_price += holding.purchased_price * holding.amount_stocks
         stock.amount_stocks += holding.amount_stocks
-    stock.average_price /= stock.amount_stocks
-    stock.average_price = round(stock.average_price, 2)
+    if len(stock.holdings) == 0:
+        stock.average_price = 0
+        stock.amount_stocks = 0
+    else:
+        stock.average_price /= stock.amount_stocks
+        stock.average_price = round(stock.average_price, 2)
     db.session.commit()
+
+def fetch_stock_info(symbol):
+    stock_info = None
+    error = False
+    try:
+        stock = yf.Ticker(symbol)
+        stock_info = stock.info
+        if len(stock_info) < 3:
+            raise ValueError
+    except ValueError as e:
+        flash(f'Ticker {symbol} not found!', category="error")
+        error = True
+    except requests.exceptions.HTTPError as e:
+        print(f"HTTP Error: {e}")
+        error = True
+
+    return stock_info, error
+
+def is_stock_in_watchlist(symbol, user,error):
+    for stock in user.stocks_watchlist:
+        if stock.symbol == symbol:
+            flash(f' {symbol} already exists ', category="error")
+            error = True
+    return error
+def add_stock_to_watchlist(symbol, user, current_price, price_target = 0):
+    stock = Watchlist(symbol=symbol, price=current_price, user_id=current_user.id, price_target=price_target)
+    db.session.add(stock)
+    db.session.commit()
+    flash("Stock added successfully to your watchlist", category="success")
 
 @views.route('/', methods=['GET','POST'])
 @login_required
 def home():
-    stock_info = None
-    # Portfolio.query.delete()
-    # Holding.query.delete()
-    # db.session.commit()
-    error =False
+    stock_info=None
     if request.method=='POST':
         symbol = request.form.get('symbol').upper()
-        try:
-            stock = yf.Ticker(symbol)
-            stock_info=stock.info
-            if(len(stock_info)<3):
-                raise ValueError
-        except ValueError as e:
-            flash(f'Ticker {symbol} not found!', category="error")
-            error=True
-        except requests.exceptions.HTTPError:
-            print(f"HTTP Error: {e}")
-            error=True
-
-        for stock in current_user.stocks_watchlist:
-            if stock.symbol == symbol:
-                error=True
-                flash(f'Ticker {symbol} already exists!', category="error")
+        stock_info,error = fetch_stock_info(symbol)
+        error = is_stock_in_watchlist(symbol,current_user,error)
 
         if error==False:
-            stock = Watchlist(symbol=symbol ,price = stock_info['currentPrice'], user_id = current_user.id)
-            db.session.add(stock)
-            db.session.commit()
-            flash("Stock added successfully to your watchlist",category="success")
+            add_stock_to_watchlist(symbol,current_user,stock_info['currentPrice'])
 
     return render_template("home.html", user = current_user, stock_info = stock_info)
 
@@ -70,17 +83,17 @@ def home():
 @login_required
 def show_portfolio():
 
-    stock_info = None
     total_value = 0
     initial_value = 0
     stock_names = []
+    stock_info=None
     stock_allocations = []
     colors = []
     i = 0
-    error = False
 
     for stock in current_user.stocks_portfolio:
         if stock.amount_stocks>0:
+            print(stock.amount_stocks)
             total_value += stock.current_price * stock.amount_stocks
             initial_value += stock.average_price * stock.amount_stocks
 
@@ -97,17 +110,8 @@ def show_portfolio():
     if request.method=='POST':
         if 'add_to_portfolio_button' in request.form:
             symbol = request.form.get('symbol').upper()
-            try:
-                stock = yf.Ticker(symbol)
-                stock_info = stock.info
-                if len(stock_info) < 3:
-                    raise ValueError
-            except ValueError as e:
-                error = True
-                flash(f'Ticker {symbol} not found!', category="error")
-            except Exception as e :
-                error = True
-                flash(f'Ticker {symbol} Error!', category="error")
+            stock_info, error = fetch_stock_info(symbol)
+
             if symbol in stock_names:
                 error = True
                 flash(f"Stock {symbol} already exists", category="error")
@@ -160,6 +164,7 @@ def delete_portfolio():
 def delete_holding():
     holding_id = request.json.get('holding_id')
     holding = Holding.query.get(holding_id)
+    print(holding)
     if holding:
         db.session.delete(holding)
         db.session.commit()
@@ -223,6 +228,7 @@ def show_calculations(symbol):
 
     stock = yf.Ticker(symbol)
     statement = stock.get_income_stmt()
+    current_price=0
     incomes = []
     periods = []
     statement.columns = pd.to_datetime(statement.columns)
@@ -257,37 +263,48 @@ def show_calculations(symbol):
         print(f"An error occurred: {e}")
 
     if request.method == 'POST':
+        if 'calculate' in request.form:
+            #inputs:
+            revenue_growth_rate = float(request.form.get('revenueGrowthRate')) / 100
 
-        #inputs:
-        revenue_growth_rate = float(request.form.get('revenueGrowthRate')) / 100
+            ebitda_margin = float(request.form.get("ebitdaMargin"))/100
+            net_margin = float(request.form.get("netMargin"))/100
+            fcf_margin = float(request.form.get("fcfMargin"))/100
 
-        ebitda_margin = float(request.form.get("ebitdaMargin"))/100
-        net_margin = float(request.form.get("netMargin"))/100
-        fcf_margin = float(request.form.get("fcfMargin"))/100
+            future_pe = int(request.form.get('futurePE'))
+            future_ev_ebitda = int(request.form.get('futureEVEBITDA'))
+            future_pfcf = int(request.form.get('futurePFCF'))
+            shares_growth = float(request.form.get('sharesGrowth'))/100
 
-        future_pe = int(request.form.get('futurePE'))
-        future_ev_ebitda = int(request.form.get('futureEVEBITDA'))
-        future_pfcf = int(request.form.get('futurePFCF'))
-        shares_growth = float(request.form.get('sharesGrowth'))/100
-
-        ror = float(request.form.get('returnRate')) / 100
-        num_of_years = int(request.form.get('numOfYears'))
-
-
-
-        dcf_value = calculate_intrinsic_value(market_cap,current_revenue,revenue_growth_rate,fcf,fcf_margin,future_pfcf,ror,num_of_years,shares_outstanding, shares_growth).__round__(2)
-        eps_value = calculate_intrinsic_value(market_cap,current_revenue,revenue_growth_rate,eps,net_margin,future_pe,ror,num_of_years,shares_outstanding, shares_growth).__round__(2)
-        ebitda_value = calculate_intrinsic_value(enterprise_value,current_revenue,revenue_growth_rate,ebitda,ebitda_margin,future_ev_ebitda,ror,num_of_years,shares_outstanding, shares_growth).__round__(2)
+            ror = float(request.form.get('returnRate')) / 100
+            num_of_years = int(request.form.get('numOfYears'))
 
 
-        return render_template("calculations.html", user=current_user, symbol=symbol, dcf_value=dcf_value,
-                               eps_value=eps_value, ebitda_value=ebitda_value, current_price = current_price,
-                               ebitda_margin = round(ebitda_margin*100,2), revenue_growth_rate = round(revenue_growth_rate*100,2), net_margin = round(net_margin*100,2), fcf_margin = round(fcf_margin*100,2) ,
-                               future_pe = future_pe,future_ev_ebitda = future_ev_ebitda,
-                               future_pfcf = future_pfcf, shares_growth = round(shares_growth * 100,2), ror = round(ror*100,2), num_of_years = num_of_years,
-                               current_pe = round(current_pe,2),current_ev_to_ebitda =round(current_ev_to_ebitda,2),current_pfcf = round(current_pfcf,2),
-                               current_net_margin = round(current_net_margin * 100,2), current_ebitda_margin = round(current_ebitda_margin * 100,2),current_fcf_margin = round(current_fcf_margin * 100,2),
-                               revenue_growth_rate_percentage= revenue_growth_rate_percentage)
+
+            dcf_value = calculate_intrinsic_value(market_cap,current_revenue,revenue_growth_rate,fcf,fcf_margin,future_pfcf,ror,num_of_years,shares_outstanding, shares_growth).__round__(2)
+            eps_value = calculate_intrinsic_value(market_cap,current_revenue,revenue_growth_rate,eps,net_margin,future_pe,ror,num_of_years,shares_outstanding, shares_growth).__round__(2)
+            ebitda_value = calculate_intrinsic_value(enterprise_value,current_revenue,revenue_growth_rate,ebitda,ebitda_margin,future_ev_ebitda,ror,num_of_years,shares_outstanding, shares_growth).__round__(2)
+
+
+            return render_template("calculations.html", user=current_user, symbol=symbol, dcf_value=dcf_value,
+                                   eps_value=eps_value, ebitda_value=ebitda_value, current_price = current_price,
+                                   ebitda_margin = round(ebitda_margin*100,2), revenue_growth_rate = round(revenue_growth_rate*100,2), net_margin = round(net_margin*100,2), fcf_margin = round(fcf_margin*100,2) ,
+                                   future_pe = future_pe,future_ev_ebitda = future_ev_ebitda,
+                                   future_pfcf = future_pfcf, shares_growth = round(shares_growth * 100,2), ror = round(ror*100,2), num_of_years = num_of_years,
+                                   current_pe = round(current_pe,2),current_ev_to_ebitda =round(current_ev_to_ebitda,2),current_pfcf = round(current_pfcf,2),
+                                   current_net_margin = round(current_net_margin * 100,2), current_ebitda_margin = round(current_ebitda_margin * 100,2),current_fcf_margin = round(current_fcf_margin * 100,2),
+                                   revenue_growth_rate_percentage= revenue_growth_rate_percentage)
+        elif 'add_price' in request.form:
+            exists = False
+            buy_price = int(request.form.get('buyPrice'))
+            for stock in current_user.stocks_watchlist:
+                if stock.symbol == symbol:
+                    exists = True
+                    stock.price_target = buy_price
+            if exists == False:
+                add_stock_to_watchlist(symbol, current_user, current_price, buy_price)
+            flash(f'Target price added successfully!', 'success')
+        db.session.commit()
 
     return render_template("calculations.html", user=current_user, symbol=symbol, current_price = current_price,
                            current_pe=round(current_pe, 2), current_ev_to_ebitda=round(current_ev_to_ebitda, 2),
@@ -295,9 +312,3 @@ def show_calculations(symbol):
                            current_net_margin=round(current_net_margin * 100, 2),
                            current_ebitda_margin=round(current_ebitda_margin * 100, 2),
                            current_fcf_margin=round(current_fcf_margin * 100, 2), revenue_growth_rate_percentage= revenue_growth_rate_percentage)
-
-
-
-
-
-
