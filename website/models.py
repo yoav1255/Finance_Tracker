@@ -22,6 +22,7 @@ class Watchlist(db.Model):
     id = db.Column(db.Integer, primary_key = True)
     symbol = db.Column(db.String(150), unique = True)
     price = db.Column(db.Integer)
+    price_target = db.Column(db.Integer,default = 0)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     
 class Portfolio(db.Model):
