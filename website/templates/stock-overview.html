@@ -19,13 +19,13 @@
         <!--  buttons between statements  -->
         <div class="row mb-4 mt-4" align="center">
             <div class="col-2">
-                <button class="btn btn-info text-left" type="submit" id="income_statement" name="selected_statement" value="income">Income Statement</button>
+                <button class="btn btn-info text-left" type="submit" id="income_statement" name="selected_statement" value="income-statement">Income Statement</button>
             </div>
             <div class="col-2">
-                <button class="btn btn-info text-left" type="submit" id="balance_sheet" name="selected_statement" value="balance">Balance Sheet</button>
+                <button class="btn btn-info text-left" type="submit" id="balance_sheet" name="selected_statement" value="balance-sheet-statement">Balance Sheet</button>
             </div>
             <div class="col-2">
-                <button class="btn btn-info text-left" type="submit" id="cash_flow" name="selected_statement" value="cash">Cash Flow</button>
+                <button class="btn btn-info text-left" type="submit" id="cash_flow" name="selected_statement" value="cash-flow-statement">Cash Flow</button>
             </div>
             <div class="col-2">
                 <button class="btn btn-primary text-right" type="submit" id="stats" name="selected_statement" value="stats">Statistics</button>
@@ -38,11 +38,11 @@
                 <button class="btn btn-secondary" type="submit" id="annual" name="selected_period" value="annual"> Annual </button>
             </div>
             <div class="col-md-1">
-                <button class="btn btn-secondary" type="submit" id="quarterly" name="selected_period" value="quarterly"> Quarterly </button>
+                <button class="btn btn-secondary" type="submit" id="quarterly" name="selected_period" value="quarter"> Quarterly </button>
             </div>
         </div>
         {% endif %}
-            <input type="hidden" name="selected_statement" value="{{ request.args.get('selected_statement', 'income') }}">
+            <input type="hidden" name="selected_statement" value="{{ request.args.get('selected_statement', 'income-statement') }}">
             <input type="hidden" name="selected_period" value="{{ request.args.get('selected_period', 'annual') }}">
     </form>
 
@@ -50,24 +50,25 @@
 <div class="row mb-4">
     <div class="container mb-4" id="data_display">
         <div class="row font-weight-bold mb-4" align="left" >
-            {% if periods %}
+            {% if stats == False %}
                 <div class="col"></div>
-                {% for period in periods %}
-                        <div class="col"> {{period.date()}} </div>
+                {% for i in range(num_periods) %}
+                        <div class="col"> {{stock_info[i]['date']}} </div>
                 {% endfor %}
             {% endif %}
+
         </div>
 
         <!--  parameters and values  -->
 
 
-    {% if selected_statement == 'income' %}
+    {% if selected_statement == 'income-statement' %}
 
         <div class="row mb-4">
             <div class="col-sm font-weight-bold"> Revenue </div>
-            {% for period in periods %}
-               {% if 'TotalRevenue' in statement[period] %}
-                    <div class="col">{{ statement[period].get('TotalRevenue') / 1000 }}</div>
+            {% for i in range(num_periods) %}
+               {% if 'revenue' in stock_info[i] %}
+                    <div class="col">{{ stock_info[i].get('revenue') / 1000 }}</div>
                 {% else %}
                     <div class="col">NaN</div>
                 {% endif %}
@@ -75,9 +76,9 @@
         </div>
         <div class="row mb-4">
             <div class="col-sm font-weight-bold"> Cost Of Revenue </div>
-            {% for period in periods %}
-                {% if 'CostOfRevenue' in statement[period] %}
-                    <div class="col">{{ statement[period].get('CostOfRevenue') / 1000 }}</div>
+            {% for i in range(num_periods) %}
+                {% if 'costOfRevenue' in stock_info[i] %}
+                    <div class="col">{{ stock_info[i].get('costOfRevenue') / 1000 }}</div>
                 {% else %}
                     <div class="col">NaN</div>
                 {% endif %}
@@ -85,9 +86,9 @@
         </div>
         <div class="row mb-4">
             <div class="col-sm font-weight-bold"> Gross Profit </div>
-            {% for period in periods %}
-                {% if 'GrossProfit' in statement[period] %}
-                    <div class="col">{{ statement[period].get('GrossProfit') / 1000 }}</div>
+            {% for i in range(num_periods) %}
+                {% if 'grossProfit' in stock_info[i] %}
+                    <div class="col">{{ stock_info[i].get('grossProfit') / 1000 }}</div>
                 {% else %}
                     <div class="col">NaN</div>
                 {% endif %}
@@ -95,9 +96,9 @@
         </div>
         <div class="row mb-4">
             <div class="col-sm font-weight-bold"> EBITDA </div>
-            {% for period in periods %}
-                {% if 'NormalizedEBITDA' in statement[period] %}
-                    <div class="col">{{ statement[period].get('NormalizedEBITDA') / 1000 }}</div>
+            {% for i in range(num_periods) %}
+                {% if 'ebitda' in stock_info[i] %}
+                    <div class="col">{{ stock_info[i].get('ebitda') / 1000 }}</div>
                 {% else %}
                     <div class="col">NaN</div>
                 {% endif %}
@@ -105,9 +106,9 @@
         </div>
         <div class="row mb-4">
             <div class="col-sm font-weight-bold"> Operating Expenses </div>
-            {% for period in periods %}
-                {% if 'OperatingExpense' in statement[period] %}
-                    <div class="col">{{ statement[period].get('OperatingExpense') / 1000 }}</div>
+            {% for i in range(num_periods) %}
+                {% if 'operatingExpenses' in stock_info[i] %}
+                    <div class="col">{{ stock_info[i].get('operatingExpenses') / 1000 }}</div>
                 {% else %}
                     <div class="col">NaN</div>
                 {% endif %}
@@ -115,9 +116,9 @@
         </div>
         <div class="row mb-4">
             <div class="col-sm font-weight-bold"> Net Income/Earnings </div>
-            {% for period in periods %}
-                {% if 'NetIncome' in statement[period] %}
-                    <div class="col">{{ statement[period].get('NetIncome') / 1000 }}</div>
+            {% for i in range(num_periods) %}
+                {% if 'netIncome' in stock_info[i] %}
+                    <div class="col">{{ stock_info[i].get('netIncome') / 1000 }}</div>
                 {% else %}
                     <div class="col">NaN</div>
                 {% endif %}
@@ -125,9 +126,9 @@
         </div>
         <div class="row mb-4">
             <div class="col-sm font-weight-bold"> Operating Income </div>
-            {% for period in periods %}
-                {% if 'OperatingIncome' in statement[period] %}
-                    <div class="col">{{ statement[period].get('OperatingIncome') / 1000 }}</div>
+            {% for i in range(num_periods) %}
+                {% if 'operatingIncome' in stock_info[i] %}
+                    <div class="col">{{ stock_info[i].get('operatingIncome') / 1000 }}</div>
                 {% else %}
                     <div class="col">NaN</div>
                 {% endif %}
@@ -135,22 +136,22 @@
         </div>
         <div class="row mb-4">
             <div class="col-sm font-weight-bold"> EPS </div>
-            {% for period in periods %}
-                {% if 'OperatingIncome' in statement[period] %}
-                    <div class="col">{{ (statement[period].get('BasicEPS')) }}</div>
+            {% for i in range(num_periods) %}
+                {% if 'eps' in stock_info[i] %}
+                    <div class="col">{{ (stock_info[i].get('eps')) }}</div>
                 {% else %}
                     <div class="col">NaN</div>
                 {% endif %}
             {% endfor %}
         </div>
 
-    {% elif selected_statement == 'balance' %}
+    {% elif selected_statement == 'balance-sheet-statement' %}
 
         <div class="row mb-4">
             <div class="col-sm font-weight-bold"> Total Assets </div>
-            {% for period in periods %}
-                {% if 'TotalAssets' in statement[period] %}
-                    <div class="col">{{ statement[period].get('TotalAssets') / 1000 }}</div>
+            {% for i in range(num_periods) %}
+                {% if 'totalAssets' in stock_info[i] %}
+                    <div class="col">{{ stock_info[i].get('totalAssets') / 1000 }}</div>
                 {% else %}
                     <div class="col">NaN</div>
                 {% endif %}
@@ -158,9 +159,9 @@
         </div>
         <div class="row mb-4">
             <div class="col-sm font-weight-bold"> Current Assets </div>
-            {% for period in periods %}
-                {% if 'CurrentAssets' in statement[period] %}
-                    <div class="col">{{ statement[period].get('CurrentAssets') / 1000 }}</div>
+            {% for i in range(num_periods) %}
+                {% if 'totalCurrentAssets' in stock_info[i] %}
+                    <div class="col">{{ stock_info[i].get('totalCurrentAssets') / 1000 }}</div>
                 {% else %}
                     <div class="col">NaN</div>
                 {% endif %}
@@ -168,9 +169,9 @@
         </div>
         <div class="row mb-4">
             <div class="col-sm font-weight-bold"> Total Cash </div>
-            {% for period in periods %}
-                {% if 'CashAndCashEquivalents' in statement[period] %}
-                    <div class="col">{{ statement[period].get('CashAndCashEquivalents') / 1000 }}</div>
+            {% for i in range(num_periods) %}
+                {% if 'cashAndCashEquivalents' in stock_info[i] %}
+                    <div class="col">{{ stock_info[i].get('cashAndCashEquivalents') / 1000 }}</div>
                 {% else %}
                     <div class="col">NaN</div>
                 {% endif %}
@@ -178,9 +179,9 @@
         </div>
         <div class="row mb-4">
             <div class="col-sm font-weight-bold"> Non Current Assets </div>
-            {% for period in periods %}
-                {% if 'TotalNonCurrentAssets' in statement[period] %}
-                    <div class="col">{{ statement[period].get('TotalNonCurrentAssets') / 1000 }}</div>
+            {% for i in range(num_periods) %}
+                {% if 'totalNonCurrentAssets' in stock_info[i] %}
+                    <div class="col">{{ stock_info[i].get('totalNonCurrentAssets') / 1000 }}</div>
                 {% else %}
                     <div class="col">NaN</div>
                 {% endif %}
@@ -188,9 +189,9 @@
         </div>
         <div class="row mb-4">
             <div class="col-sm font-weight-bold"> Total Liabilities </div>
-            {% for period in periods %}
-                {% if 'TotalLiabilitiesNetMinorityInterest' in statement[period] %}
-                    <div class="col">{{ statement[period].get('TotalLiabilitiesNetMinorityInterest') / 1000 }}</div>
+            {% for i in range(num_periods) %}
+                {% if 'totalLiabilities' in stock_info[i] %}
+                    <div class="col">{{ stock_info[i].get('totalLiabilities') / 1000 }}</div>
                 {% else %}
                     <div class="col">NaN</div>
                 {% endif %}
@@ -198,9 +199,9 @@
         </div>
         <div class="row mb-4">
             <div class="col-sm font-weight-bold"> Current Liabilities </div>
-            {% for period in periods %}
-                {% if 'CurrentLiabilities' in statement[period] %}
-                    <div class="col">{{ statement[period].get('CurrentLiabilities') / 1000 }}</div>
+            {% for i in range(num_periods) %}
+                {% if 'totalCurrentLiabilities' in stock_info[i] %}
+                    <div class="col">{{ stock_info[i].get('totalCurrentLiabilities') / 1000 }}</div>
                 {% else %}
                     <div class="col">NaN</div>
                 {% endif %}
@@ -208,9 +209,9 @@
         </div>
         <div class="row mb-4">
             <div class="col-sm font-weight-bold"> Long Term Debt </div>
-            {% for period in periods %}
-                {% if 'LongTermDebt' in statement[period] %}
-                    <div class="col">{{ statement[period].get('LongTermDebt') / 1000 }}</div>
+            {% for i in range(num_periods) %}
+                {% if 'longTermDebt' in stock_info[i] %}
+                    <div class="col">{{ stock_info[i].get('longTermDebt') / 1000 }}</div>
                 {% else %}
                     <div class="col">NaN</div>
                 {% endif %}
@@ -218,19 +219,19 @@
         </div>
         <div class="row mb-4">
             <div class="col-sm font-weight-bold"> Non Current Liabilities </div>
-            {% for period in periods %}
-                {% if 'TotalNonCurrentLiabilitiesNetMinorityInterest' in statement[period] %}
-                    <div class="col">{{ statement[period].get('TotalNonCurrentLiabilitiesNetMinorityInterest') / 1000 }}</div>
+            {% for i in range(num_periods) %}
+                {% if 'totalNonCurrentLiabilities' in stock_info[i] %}
+                    <div class="col">{{ stock_info[i].get('totalNonCurrentLiabilities') / 1000 }}</div>
                 {% else %}
                     <div class="col">NaN</div>
                 {% endif %}
             {% endfor %}
         </div>
         <div class="row mb-4">
-            <div class="col-sm font-weight-bold"> Stock issued </div>
-            {% for period in periods %}
-                {% if 'ShareIssued' in statement[period] %}
-                    <div class="col">{{ statement[period].get('ShareIssued') / 1000 }}</div>
+            <div class="col-sm font-weight-bold"> Liabilities and Equity </div>
+            {% for i in range(num_periods) %}
+                {% if 'totalLiabilitiesAndTotalEquity' in stock_info[i] %}
+                    <div class="col">{{ stock_info[i].get('totalLiabilitiesAndTotalEquity') / 1000 }}</div>
                 {% else %}
                     <div class="col">NaN</div>
                 {% endif %}
@@ -238,22 +239,22 @@
         </div>
         <div class="row mb-4">
             <div class="col-sm font-weight-bold"> Shares Outstanding </div>
-            {% for period in periods %}
-                {% if 'OrdinarySharesNumber' in statement[period] %}
-                    <div class="col">{{ statement[period].get('OrdinarySharesNumber') / 1000 }}</div>
+            {% for i in range(num_periods) %}
+                {% if 'commonStock' in stock_info[i] %}
+                    <div class="col">{{ stock_info[i].get('commonStock') / 1000 }}</div>
                 {% else %}
                     <div class="col">NaN</div>
                 {% endif %}
             {% endfor %}
         </div>
 
-    {% elif selected_statement == 'cash' %}
+    {% elif selected_statement == 'cash-flow-statement' %}
 
         <div class="row mb-4">
             <div class="col-sm font-weight-bold"> Cash From Operating Activities </div>
-            {% for period in periods %}
-                {% if 'OperatingCashFlow' in statement[period] %}
-                    <div class="col">{{ statement[period].get('OperatingCashFlow') / 1000 }}</div>
+            {% for i in range(num_periods) %}
+                {% if 'operatingCashFlow' in stock_info[i] %}
+                    <div class="col">{{ stock_info[i].get('operatingCashFlow') / 1000 }}</div>
                 {% else %}
                     <div class="col">NaN</div>
                 {% endif %}
@@ -261,9 +262,9 @@
         </div>
         <div class="row mb-4">
             <div class="col-sm font-weight-bold"> Net Income </div>
-            {% for period in periods %}
-                {% if 'NetIncomeFromContinuingOperations' in statement[period] %}
-                    <div class="col">{{ statement[period].get('NetIncomeFromContinuingOperations') / 1000 }}</div>
+            {% for i in range(num_periods) %}
+                {% if 'netIncome' in stock_info[i] %}
+                    <div class="col">{{ stock_info[i].get('netIncome') / 1000 }}</div>
                 {% else %}
                     <div class="col">NaN</div>
                 {% endif %}
@@ -271,9 +272,9 @@
         </div>
         <div class="row mb-4">
             <div class="col-sm font-weight-bold"> Cash From Investing Activities </div>
-            {% for period in periods %}
-                {% if 'InvestingCashFlow' in statement[period] %}
-                    <div class="col">{{ statement[period].get('InvestingCashFlow') / 1000 }}</div>
+            {% for i in range(num_periods) %}
+                {% if 'netCashUsedForInvestingActivites' in stock_info[i] %}
+                    <div class="col">{{ stock_info[i].get('netCashUsedForInvestingActivites') / 1000 }}</div>
                 {% else %}
                     <div class="col">NaN</div>
                 {% endif %}
@@ -281,9 +282,9 @@
         </div>
         <div class="row mb-4">
             <div class="col-sm font-weight-bold"> Cash From financing Activities </div>
-            {% for period in periods %}
-                {% if 'FinancingCashFlow' in statement[period] %}
-                    <div class="col">{{ statement[period].get('FinancingCashFlow') / 1000 }}</div>
+            {% for i in range(num_periods) %}
+                {% if 'netCashUsedProvidedByFinancingActivities' in stock_info[i] %}
+                    <div class="col">{{ stock_info[i].get('netCashUsedProvidedByFinancingActivities') / 1000 }}</div>
                 {% else %}
                     <div class="col">NaN</div>
                 {% endif %}
@@ -291,9 +292,9 @@
         </div>
         <div class="row mb-4">
             <div class="col-sm font-weight-bold"> Free Cash Flow </div>
-            {% for period in periods %}
-                {% if 'FreeCashFlow' in statement[period] %}
-                    <div class="col">{{ statement[period].get('FreeCashFlow') / 1000 }}</div>
+            {% for i in range(num_periods) %}
+                {% if 'freeCashFlow' in stock_info[i] %}
+                    <div class="col">{{ stock_info[i].get('freeCashFlow') / 1000 }}</div>
                 {% else %}
                     <div class="col">NaN</div>
                 {% endif %}
@@ -303,66 +304,66 @@
     {% elif selected_statement == 'stats' %}
         <div class="row mb-4">
             <div class="col-sm font-weight-bold"> Industry </div>
-            <div class="col">{{ stock_info['industry'] }}</div>
+            <div class="col">{{ profile['industry'] }}</div>
 
             <div class="col-sm font-weight-bold"> Trailing Eps  </div>
-            <div class="col">  {{ ((stock_info.get('trailingEps')) | round(1)) if ('trailingEps' in stock_info) else 'NaN' }}</div>
+            <div class="col">  {{ ((stock_info[0][eps]) | round(1)) if ('eps' in stock_info[0]) else 'NaN' }}</div>
         </div>
         <div class="row mb-4">
             <div class="col-sm font-weight-bold"> Sector </div>
-            <div class="col">{{ stock_info['sector'] }}</div>
+            <div class="col">{{ profile['sector'] }}</div>
 
-            <div class="col-sm font-weight-bold"> Forward Eps  </div>
-            <div class="col">  {{ ((stock_info.get('forwardEps')) | round(1)) if ('forwardEps' in stock_info) else 'NaN' }}</div>
+            <div class="col-sm font-weight-bold"> Exchange  </div>
+            <div class="col">  {{ profile['exchange']}}</div>
         </div>
         <div class="row mb-4">
             <div class="col-sm font-weight-bold"> Market Cap  </div>
-            <div class="col">  {{ ((stock_info.get('marketCap') / 1000)) if ('marketCap' in stock_info) else 'NaN' }}</div>
+            <div class="col">  {{ ((profile['mktCap'] / 1000)) if ('mktCap' in profile) else 'NaN' }}</div>
 
-            <div class="col-sm font-weight-bold"> PEG  </div>
-            <div class="col">  {{ ((stock_info.get('pegRatio')) | round(1)) if ('pegRatio' in stock_info) else 'NaN' }}</div>
+            <div class="col-sm font-weight-bold"> Payout  </div>
+            <div class="col">  {{ ((key_metrics['payoutRatioTTM']) | round(1)) if ('payoutRatioTTM' in key_metrics) else 'NaN' }}</div>
         </div>
         <div class="row mb-4">
             <div class="col-sm font-weight-bold"> Enterprise Value  </div>
-            <div class="col">  {{ ((stock_info.get('enterpriseValue') / 1000)) if ('enterpriseValue' in stock_info) else 'NaN' }}</div>
+            <div class="col">  {{ ((key_metrics['enterpriseValueTTM'] / 1000)) if ('enterpriseValueTTM' in key_metrics) else 'NaN' }}</div>
 
-            <div class="col-sm font-weight-bold"> ROA  </div>
-            <div class="col">  {{ ((stock_info.get('returnOnAssets')*100) | round(1)) if ('returnOnAssets' in stock_info) else 'NaN' }}</div>
+            <div class="col-sm font-weight-bold"> ROIC  </div>
+            <div class="col">  {{ ((key_metrics['roicTTM']*100) | round(1)) if ('roicTTM' in key_metrics) else 'NaN' }}</div>
         </div>
         <div class="row mb-4">
-            <div class="col-sm font-weight-bold"> Beta </div>
-            <div class="col">  {{ ((stock_info.get('beta')) | round(1)) if ('beta' in stock_info) else 'NaN' }}</div>
+            <div class="col-sm font-weight-bold"> Current Ratio </div>
+            <div class="col">  {{ ((key_metrics['currentRatioTTM']) | round(1)) if ('currentRatioTTM' in key_metrics) else 'NaN' }}</div>
 
             <div class="col-sm font-weight-bold"> ROE  </div>
-            <div class="col">  {{ ((stock_info.get('returnOnEquity')*100) | round(1)) if ('returnOnEquity' in stock_info) else 'NaN' }}</div>
+            <div class="col">  {{ ((key_metrics['roeTTM']*100) | round(1)) if ('roeTTM' in key_metrics) else 'NaN' }}</div>
         </div>
         <div class="row mb-4">
             <div class="col-sm font-weight-bold"> Trailing PE </div>
-            <div class="col">  {{ ((stock_info.get('trailingPE')) | round(1)) if ('trailingPE' in stock_info) else 'NaN' }}</div>
+            <div class="col">  {{ ((key_metrics['peRatioTTM']) | round(1)) if ('peRatioTTM' in key_metrics) else 'NaN' }}</div>
 
             <div class="col-sm font-weight-bold"> Gross Margins  </div>
-            <div class="col">  {{ ((stock_info.get('grossMargins')*100) | round(1)) if ('grossMargins' in stock_info) else 'NaN' }}</div>
+            <div class="col">  {{ ((key_metrics['grossProfitMarginTTM']*100) | round(1)) if ('grossProfitMarginTTM' in key_metrics) else 'NaN' }}</div>
         </div>
         <div class="row mb-4">
-            <div class="col-sm font-weight-bold"> Forward PE </div>
-            <div class="col">  {{ ((stock_info.get('forwardPE')) | round(1)) if ('forwardPE' in stock_info) else 'NaN' }}</div>
+            <div class="col-sm font-weight-bold"> PEG </div>
+            <div class="col">  {{ ((ratios['pegRatioTTM']) | round(1)) if ('pegRatioTTM' in ratios) else 'NaN' }}</div>
 
             <div class="col-sm font-weight-bold"> Ebitda Margins  </div>
-            <div class="col">  {{ ((stock_info.get('ebitdaMargins') * 100) | round(1)) if ('ebitdaMargins' in stock_info) else 'NaN' }}</div>
+            <div class="col">  {{ ((stock_info[0]['ebitdaratio'] * 100) | round(1)) if ('ebitdaratio' in stock_info[0]) else 'NaN' }}</div>
         </div>
         <div class="row mb-4">
             <div class="col-sm font-weight-bold"> Shares Outstanding  </div>
-            <div class="col">  {{ ((stock_info.get('sharesOutstanding') / 1000)) if ('sharesOutstanding' in stock_info) else 'NaN' }}</div>
+            <div class="col">  {{ ((stock_info[0]['weightedAverageShsOut'] / 1000)) if ('weightedAverageShsOut' in stock_info[0]) else 'NaN' }}</div>
 
             <div class="col-sm font-weight-bold"> Operating Margins  </div>
-            <div class="col">  {{ ((stock_info.get('operatingMargins') * 100) | round(1)) if ('operatingMargins' in stock_info) else 'NaN' }}</div>
+            <div class="col">  {{ ((ratios['priceToOperatingCashFlowsRatioTTM'] * 100) | round(1)) if ('priceToOperatingCashFlowsRatioTTM' in ratios) else 'NaN' }}</div>
         </div>
         <div class="row mb-4">
             <div class="col-sm font-weight-bold"> P/B  </div>
-            <div class="col">  {{ ((stock_info.get('priceToBook') * 100) | round(1)) if ('priceToBook' in stock_info) else 'NaN' }}</div>
+            <div class="col">  {{ ((ratios['priceBookValueRatioTTM'] * 100) | round(1)) if ('priceBookValueRatioTTM' in ratios) else 'NaN' }}</div>
 
             <div class="col-sm font-weight-bold"> Net Margins  </div>
-            <div class="col">  {{ ((stock_info.get('profitMargins') * 100) | round(1)) if ('profitMargins' in stock_info) else 'NaN' }}</div>
+            <div class="col">  {{ ((ratios['netProfitMarginTTM'] * 100) | round(1)) if ('netProfitMarginTTM' in ratios) else 'NaN' }}</div>
         </div>
 
 
@@ -370,7 +371,7 @@
 </div>
     {% if selected_statement == 'stats' %}
     <div class="row mb-4 font-weight-bold" align="center">
-        <div class="col" align="center">{{stock_info['longBusinessSummary']}}
+        <div class="col" align="center">{{profile['description']}}
         </div>
     </div>
     {% endif %}
