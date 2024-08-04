@@ -15,7 +15,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 import seaborn as sns
 import numpy as np
 
-
+#TODO enable smart search
 plt.style.use("ggplot")
 
 views = Blueprint('views', __name__)
@@ -41,6 +41,7 @@ def fetch_stock_info(symbol):
     try:
         stock = yf.Ticker(symbol)
         stock_info = stock.info
+
         if len(stock_info) < 3:
             raise ValueError
     except ValueError as e:
@@ -64,6 +65,9 @@ def add_stock_to_watchlist(symbol, user, current_price, price_target = 0):
     db.session.commit()
     flash("Stock added successfully to your watchlist", category="success")
 
+
+#TODO add diffrent from value
+#TODO add email notification when target price hit
 @views.route('/', methods=['GET','POST'])
 @login_required
 def home():
@@ -211,7 +215,7 @@ def show_stock(symbol):
             print("something is not correct")
 
     periods = []
-    if stats==False:
+    if not stats:
         statement.columns = pd.to_datetime(statement.columns)
         for period in statement.columns:
             nan_count = np.sum(statement[period].isna())
@@ -231,17 +235,20 @@ def show_calculations(symbol):
     current_price=0
     incomes = []
     periods = []
+    per = statement.columns[len(statement.columns)-1]
     statement.columns = pd.to_datetime(statement.columns)
     for period in statement.columns:
         periods.append(period)
         incomes.append(statement[period]['TotalRevenue'])
     revenue_growth_rate_percentage = calculate_annual_growth_rate(incomes[len(incomes)-1], incomes[0],len(incomes) )
 
+    #TODO fix issues with missing data
     try:
         stock_info = stock.info
         #financials
+        print(stock_info)
         current_price = stock_info['currentPrice']
-        fcf = stock_info['freeCashflow']
+        fcf = stock_info.get('freeCashflow',1)
         ebitda = stock_info['ebitda']
         eps = stock_info['trailingEps']
         market_cap = stock_info["marketCap"]
