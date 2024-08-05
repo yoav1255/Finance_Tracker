@@ -20,7 +20,7 @@ class User(db.Model, UserMixin):
 
 class Watchlist(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    symbol = db.Column(db.String(150), unique=True)
+    symbol = db.Column(db.String(150))
     price = db.Column(db.Integer)
     price_target = db.Column(db.Integer, default=0)
     notified = db.Column(db.Boolean, default=False)
@@ -29,7 +29,7 @@ class Watchlist(db.Model):
 
 class Portfolio(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    symbol = db.Column(db.String(150), unique=True)
+    symbol = db.Column(db.String(150))
     current_price = db.Column(db.Integer)
     average_price = db.Column(db.Integer)
     amount_stocks = db.Column(db.Integer)

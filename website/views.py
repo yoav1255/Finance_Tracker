@@ -58,8 +58,8 @@ def fetch_stock_info(symbol):
     return stock_info, error
 
 
-def is_stock_in_watchlist(symbol, user, error):
-    for stock in user.stocks_watchlist:
+def is_stock_in_watchlist(symbol, error):
+    for stock in current_user.stocks_watchlist:
         if stock.symbol == symbol:
             flash(f' {symbol} already exists ', category="error")
             error = True
@@ -98,7 +98,6 @@ def update_allocation():
 
     return stock_names, stock_allocations, colors,initial_value,total_value
 
-#TODO same stock diffrent users - problem
 def email_notification():
     smtp_server = "smtp.gmail.com"
     smtp_port = 587
@@ -139,7 +138,7 @@ def home():
     if request.method == 'POST':
         symbol = request.form.get('symbol').upper()
         stock_info, error = fetch_stock_info(symbol)
-        error = is_stock_in_watchlist(symbol, current_user, error)
+        error = is_stock_in_watchlist(symbol, error)
 
         if not error:
             add_stock_to_watchlist(symbol, stock_info['price'])
