@@ -238,10 +238,13 @@ def show_stock(symbol):
     profile = []
     key_metrics = []
     ratios = []
+    dcf = []
 
     if selected_statement == 'stats':
         stats = True
     try:
+        url_dcf = f'https://financialmodelingprep.com/api/v3/discounted-cash-flow/{symbol}?apikey={FMP_API_KEY}'
+        dcf = requests.get(url_dcf).json()[0]
         if not stats:
             url = f'https://financialmodelingprep.com/api/v3/{selected_statement}/{symbol}?period={selected_period}&apikey={FMP_API_KEY}'
             stock_info = requests.get(url).json()
@@ -267,7 +270,7 @@ def show_stock(symbol):
     return render_template("stock-overview.html", user=current_user, symbol=symbol,
                            selected_statement=selected_statement, selected_period=selected_period,
                            stock_info=stock_info, stats=stats, num_periods=len(stock_info), ratios=ratios,
-                           profile=profile, key_metrics=key_metrics)
+                           profile=profile, key_metrics=key_metrics, dcf=dcf)
 
 
 @views.route('/stock/<symbol>/calculations', methods=['GET', 'POST'])
@@ -288,10 +291,12 @@ def show_calculations(symbol):
 
     current_price = 0
     incomes = []
-    periods = []
+    shares = []
     for i in range(len(income_statement)):
         incomes.append(income_statement[i]['revenue'])
+        shares.append(income_statement[i]['weightedAverageShsOut'])
     revenue_growth_rate_percentage = calculate_annual_growth_rate(incomes[len(incomes) - 1], incomes[0], len(incomes))
+    shares_growth_rate_percentage = calculate_annual_growth_rate(shares[len(shares) - 1], shares[0], len(shares))
 
     try:
         #financials
@@ -326,9 +331,9 @@ def show_calculations(symbol):
             net_margin = float(request.form.get("netMargin")) / 100
             fcf_margin = float(request.form.get("fcfMargin")) / 100
 
-            future_pe = int(request.form.get('futurePE'))
-            future_ev_ebitda = int(request.form.get('futureEVEBITDA'))
-            future_pfcf = int(request.form.get('futurePFCF'))
+            future_pe = float(request.form.get('futurePE'))
+            future_ev_ebitda = float(request.form.get('futureEVEBITDA'))
+            future_pfcf = float(request.form.get('futurePFCF'))
             shares_growth = float(request.form.get('sharesGrowth')) / 100
 
             ror = float(request.form.get('returnRate')) / 100
@@ -357,7 +362,7 @@ def show_calculations(symbol):
                                    current_net_margin=round(current_net_margin * 100, 2),
                                    current_ebitda_margin=round(current_ebitda_margin * 100, 2),
                                    current_fcf_margin=round(current_fcf_margin * 100, 2),
-                                   revenue_growth_rate_percentage=revenue_growth_rate_percentage)
+                                   revenue_growth_rate_percentage=revenue_growth_rate_percentage, shares_growth_rate_percentage=shares_growth_rate_percentage)
         elif 'add_price' in request.form:
             exists = False
             buy_price = int(request.form.get('buyPrice'))
@@ -377,4 +382,5 @@ def show_calculations(symbol):
                            current_net_margin=round(current_net_margin * 100, 2),
                            current_ebitda_margin=round(current_ebitda_margin * 100, 2),
                            current_fcf_margin=round(current_fcf_margin * 100, 2),
-                           revenue_growth_rate_percentage=revenue_growth_rate_percentage)
+                           revenue_growth_rate_percentage=revenue_growth_rate_percentage,
+                           shares_growth_rate_percentage=shares_growth_rate_percentage)

@@ -7,7 +7,7 @@
 <!--    HEAD    -->
     <div class="row mb-4 font-weight-bold" align="center">
         <div class="col-md-10" align="center" style="font-size: 24px;">{{symbol}}
-            <span style="font-size: 16px;">{{profile['price']}} $</span>
+            <span style="font-size: 16px;">{{dcf['Stock Price']}} $</span>
         </div>
         <div class="col-md-2" align="right">
             <a class="btn btn-primary" href="/stock/{{symbol}}/calculations">Calculations</a>
@@ -30,6 +30,8 @@
             <div class="col-2">
                 <button class="btn btn-primary text-right" type="submit" id="stats" name="selected_statement" value="stats">Statistics</button>
             </div>
+            <div class="col-2"></div>
+            <div class="col-2"> DCF : {{ ((dcf['dcf']) | round(1)) if ('dcf' in dcf) else 'NaN' }}</div>
         </div>
             <!--  buttons between annual/quarterly  -->
         {% if not stats %}

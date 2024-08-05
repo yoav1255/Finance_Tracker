@@ -19,11 +19,14 @@
     <form method="POST" action="">
         <div class="row">
             <div class="col-md-8 offset-md-2">
+                <div class="form-group">
+                    <button type="button" id="autoFillButton" class="btn btn-info btn-block">Auto Fill</button>
+                </div>
                 <div class="form-row">
                     <div class="form-group col-md-6">
                         <label for="revenueGrowthRate">Revenue Growth Rate (%)</label>
                         <input type="number" class="form-control" id="revenueGrowthRate" name="revenueGrowthRate" step="0.01" value="{{ revenue_growth_rate | default('', true) }}">
-                        <small class="form-text text-muted">last 4 years growth : {{revenue_growth_rate_percentage}}%</small>
+                        <small class="form-text text-muted">last 5 years growth : {{revenue_growth_rate_percentage}}%</small>
                     </div>
                     <div class="form-group col-md-6">
                         <label for="ebitdaMargin">Ebitda Margin (%)</label>
@@ -65,7 +68,8 @@
                     <div class="form-group col-md-6">
                         <label for="sharesGrowth">Shares Growth</label>
                         <input type="number" class="form-control" id="sharesGrowth" name="sharesGrowth" step="0.01" value="{{ shares_growth | default('', true) }}">
-                        <small class="form-text text-muted"></small>
+                        <small class="form-text text-muted">last 5 years growth : {{shares_growth_rate_percentage}}%</small>
+
                     </div>
                 </div>
                 <div class="form-row">
@@ -106,5 +110,20 @@
 
     </form>
 </div>
+
+<script>
+    document.getElementById('autoFillButton').addEventListener('click', function() {
+        document.getElementById('revenueGrowthRate').value = {{ revenue_growth_rate_percentage }}; // example value
+        document.getElementById('ebitdaMargin').value = {{ current_ebitda_margin }}; // example value
+        document.getElementById('netMargin').value = {{current_net_margin}}; // example value
+        document.getElementById('fcfMargin').value = {{current_fcf_margin}}; // example value
+        document.getElementById('futurePE').value = {{current_pe}}; // example value
+        document.getElementById('futureEVEBITDA').value = {{current_ev_to_ebitda}}; // example value
+        document.getElementById('futurePFCF').value = {{current_pfcf}}; // example value
+        document.getElementById('sharesGrowth').value = {{shares_growth_rate_percentage}}; // example value
+        document.getElementById('returnRate').value = 10; // example value
+        document.getElementById('numOfYears').value = 5; // example value
+    });
+</script>
 
 {% endblock %}
