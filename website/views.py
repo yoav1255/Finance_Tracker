@@ -205,14 +205,15 @@ def show_stock(symbol):
             stock_info = requests.get(url).json()
 
         else:
-            url = f'https://financialmodelingprep.com/api/v3/income-statement/{symbol}/period=annual?apikey={FMP_API_KEY}'
+            url = f'https://financialmodelingprep.com/api/v3/income-statement/{symbol}?period=annual&apikey={FMP_API_KEY}'
             url_profile = f'https://financialmodelingprep.com/api/v3/profile/{symbol}?apikey={FMP_API_KEY}'
             url_key_metrics = f'https://financialmodelingprep.com/api/v3/key-metrics-ttm/{symbol}?apikey={FMP_API_KEY}'
             url_ratios = f'https://financialmodelingprep.com/api/v3/ratios-ttm/{symbol}?apikey={FMP_API_KEY}'
-            stock_info=requests.get(url).json()
-            profile = requests.get(url_profile).json()
-            key_metrics = requests.get(url_key_metrics).json()
-            ratios = requests.get(url_ratios).json()
+            stock_info = requests.get(url).json()[0]
+            profile = requests.get(url_profile).json()[0]
+            key_metrics = requests.get(url_key_metrics).json()[0]
+            ratios = requests.get(url_ratios).json()[0]
+            print(stock_info)
 
 
     except requests.exceptions.HTTPError as e:
@@ -223,44 +224,50 @@ def show_stock(symbol):
 
     return render_template("stock-overview.html", user=current_user, symbol=symbol,
                            selected_statement=selected_statement, selected_period=selected_period,
-                           stock_info=stock_info, stats=stats, num_periods=len(stock_info),ratios=ratios,profile=profile,key_metrics=key_metrics)
+                           stock_info=stock_info, stats=stats, num_periods=len(stock_info), ratios=ratios,
+                           profile=profile, key_metrics=key_metrics)
 
 
 @views.route('/stock/<symbol>/calculations', methods=['GET', 'POST'])
 @login_required
 def show_calculations(symbol):
-    stock = yf.Ticker(symbol)
-    statement = stock.get_income_stmt()
+    #todo optimize the requests (cashing, batch requests....)
+    url_income = f'https://financialmodelingprep.com/api/v3/income-statement/{symbol}?period=yearly&apikey={FMP_API_KEY}'
+    url_balance = f'https://financialmodelingprep.com/api/v3/balance-sheet-statement/{symbol}?period=yearly&apikey={FMP_API_KEY}'
+    url_cash = f'https://financialmodelingprep.com/api/v3/cash-flow-statement/{symbol}?period=yearly&apikey={FMP_API_KEY}'
+    url_profile = f'https://financialmodelingprep.com/api/v3/profile/{symbol}?apikey={FMP_API_KEY}'
+    url_key_metrics = f'https://financialmodelingprep.com/api/v3/key-metrics-ttm/{symbol}?apikey={FMP_API_KEY}'
+
+    income_statement = requests.get(url_income).json()
+    balance_statement = requests.get(url_balance).json()
+    cashflow_statement = requests.get(url_cash).json()
+    profile = requests.get(url_profile).json()[0]
+    key_metrics = requests.get(url_key_metrics).json()[0]
+
     current_price = 0
     incomes = []
     periods = []
-    per = statement.columns[len(statement.columns) - 1]
-    statement.columns = pd.to_datetime(statement.columns)
-    for period in statement.columns:
-        periods.append(period)
-        incomes.append(statement[period]['TotalRevenue'])
+    for i in range(len(income_statement)):
+        incomes.append(income_statement[i]['revenue'])
     revenue_growth_rate_percentage = calculate_annual_growth_rate(incomes[len(incomes) - 1], incomes[0], len(incomes))
 
-    #TODO fix issues with missing data
     try:
-        stock_info = stock.info
         #financials
-        print(stock_info)
-        current_price = stock_info['currentPrice']
-        fcf = stock_info.get('freeCashflow', 1)
-        ebitda = stock_info['ebitda']
-        eps = stock_info['trailingEps']
-        market_cap = stock_info["marketCap"]
+        current_price = profile['price']
+        fcf = cashflow_statement[0]['freeCashFlow']
+        ebitda = income_statement[0]['ebitda']
+        eps = income_statement[0]['eps']
+        market_cap = profile["mktCap"]
 
-        shares_outstanding = stock_info['sharesOutstanding']
-        current_pe = stock_info["trailingPE"]
-        current_ev_to_ebitda = stock_info["enterpriseToEbitda"]
-        current_pfcf = market_cap / fcf
-        current_net_margin = stock_info["profitMargins"]
-        current_ebitda_margin = stock_info["ebitdaMargins"]
-        current_revenue = stock_info["totalRevenue"]
+        shares_outstanding = income_statement[0]['weightedAverageShsOut']
+        current_pe = key_metrics["peRatioTTM"]
+        current_ev_to_ebitda = key_metrics["enterpriseValueOverEBITDATTM"]
+        current_pfcf = float(market_cap / fcf)
+        current_revenue = income_statement[0]["revenue"]
+        current_net_margin = float(income_statement[0]["netIncome"] / current_revenue)
+        current_ebitda_margin = float(ebitda / current_revenue)
         current_fcf_margin = float(fcf / current_revenue)
-        enterprise_value = stock_info["enterpriseValue"]
+        enterprise_value = key_metrics["enterpriseValueTTM"]
 
     except requests.exceptions.HTTPError as e:
         print(f"HTTP Error: {e}")

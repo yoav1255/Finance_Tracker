@@ -7,10 +7,10 @@
 <!--    HEAD    -->
     <div class="row mb-4 font-weight-bold" align="center">
         <div class="col-md-10" align="center" style="font-size: 24px;">{{symbol}}
-            <span style="font-size: 16px;">{{stock_info['currentPrice']}} $</span>
+            <span style="font-size: 16px;">{{profile['price']}} $</span>
         </div>
         <div class="col-md-2" align="right">
-            <a class="btn btn-primary" href="/{{symbol}}/calculations">Calculations</a>
+            <a class="btn btn-primary" href="/stock/{{symbol}}/calculations">Calculations</a>
         </div>
 
     </div>
@@ -307,7 +307,7 @@
             <div class="col">{{ profile['industry'] }}</div>
 
             <div class="col-sm font-weight-bold"> Trailing Eps  </div>
-            <div class="col">  {{ ((stock_info[0][eps]) | round(1)) if ('eps' in stock_info[0]) else 'NaN' }}</div>
+            <div class="col">  {{ ((stock_info['eps']) | round(1)) if ('eps' in stock_info) else 'NaN' }}</div>
         </div>
         <div class="row mb-4">
             <div class="col-sm font-weight-bold"> Sector </div>
@@ -342,21 +342,21 @@
             <div class="col">  {{ ((key_metrics['peRatioTTM']) | round(1)) if ('peRatioTTM' in key_metrics) else 'NaN' }}</div>
 
             <div class="col-sm font-weight-bold"> Gross Margins  </div>
-            <div class="col">  {{ ((key_metrics['grossProfitMarginTTM']*100) | round(1)) if ('grossProfitMarginTTM' in key_metrics) else 'NaN' }}</div>
+            <div class="col">  {{ ((ratios['grossProfitMarginTTM']*100) | round(1)) if ('grossProfitMarginTTM' in ratios) else 'NaN' }}</div>
         </div>
         <div class="row mb-4">
             <div class="col-sm font-weight-bold"> PEG </div>
             <div class="col">  {{ ((ratios['pegRatioTTM']) | round(1)) if ('pegRatioTTM' in ratios) else 'NaN' }}</div>
 
             <div class="col-sm font-weight-bold"> Ebitda Margins  </div>
-            <div class="col">  {{ ((stock_info[0]['ebitdaratio'] * 100) | round(1)) if ('ebitdaratio' in stock_info[0]) else 'NaN' }}</div>
+            <div class="col">  {{ ((stock_info['ebitdaratio'] * 100) | round(1)) if ('ebitdaratio' in stock_info) else 'NaN' }}</div>
         </div>
         <div class="row mb-4">
             <div class="col-sm font-weight-bold"> Shares Outstanding  </div>
-            <div class="col">  {{ ((stock_info[0]['weightedAverageShsOut'] / 1000)) if ('weightedAverageShsOut' in stock_info[0]) else 'NaN' }}</div>
+            <div class="col">  {{ ((stock_info['weightedAverageShsOut'] / 1000)) if ('weightedAverageShsOut' in stock_info) else 'NaN' }}</div>
 
-            <div class="col-sm font-weight-bold"> Operating Margins  </div>
-            <div class="col">  {{ ((ratios['priceToOperatingCashFlowsRatioTTM'] * 100) | round(1)) if ('priceToOperatingCashFlowsRatioTTM' in ratios) else 'NaN' }}</div>
+            <div class="col-sm font-weight-bold"> P/OCF  </div>
+            <div class="col">  {{ ((ratios['priceToOperatingCashFlowsRatioTTM']) | round(1)) if ('priceToOperatingCashFlowsRatioTTM' in ratios) else 'NaN' }}</div>
         </div>
         <div class="row mb-4">
             <div class="col-sm font-weight-bold"> P/B  </div>
