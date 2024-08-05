@@ -98,7 +98,7 @@ def update_allocation():
 
     return stock_names, stock_allocations, colors,initial_value,total_value
 
-#todo same stock diffrent users - problem
+#TODO same stock diffrent users - problem
 def email_notification():
     smtp_server = "smtp.gmail.com"
     smtp_port = 587
@@ -226,9 +226,7 @@ def delete_holding():
     return jsonify({})
 
 
-#todo handle stats, we need to url to fetch the data from
-#todo quarterly statements only for subscription
-#todo balance sheet and cash flow statements doesnt work
+#TODO quarterly statements only for subscription
 @views.route('/stock/<symbol>', methods=['GET', 'POST'])
 @login_required
 def show_stock(symbol):
