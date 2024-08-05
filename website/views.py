@@ -14,8 +14,14 @@ from .helpers import determine_style, calculate_future_value, calculate_intrinsi
     get_random_color
 import numpy as np
 
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+
+
 load_dotenv()
 FMP_API_KEY = os.getenv('FMP_API_KEY')
+MAIL_PASSWORD = os.getenv('MAIL_PASSWORD')
 
 #TODO enable smart search
 plt.style.use("ggplot")
@@ -92,13 +98,44 @@ def update_allocation():
 
     return stock_names, stock_allocations, colors,initial_value,total_value
 
+#todo same stock diffrent users - problem
+def email_notification():
+    smtp_server = "smtp.gmail.com"
+    smtp_port = 587
+    sender_email = "yoav.mailsender@gmail.com"
+    password = MAIL_PASSWORD
+    receiver_email = f'{current_user.email}'
+    subject = 'Yoav Finance Tracker - Hitting Price Target'
+
+    for stock in current_user.stocks_watchlist:
+        if stock.price < stock.price_target and not stock.notified:
+
+            body = f'Price target alert {stock.price_target} for {stock.symbol}'
+            msg = MIMEMultipart()
+            msg['Subject'] = subject
+            msg['From'] = sender_email
+            msg['To'] = receiver_email
+            msg.attach(MIMEText(body, 'plain'))
+            try:
+                server = smtplib.SMTP(smtp_server, smtp_port)
+                server.starttls()
+                server.login(sender_email, password)
+                server.sendmail(sender_email, receiver_email, msg.as_string())
+                print(f'Email sent for {stock.symbol} with price target {stock.price_target} !')
+                stock.notified = True
+                db.session.commit()
+            except Exception as e:
+                print(e)
+            finally:
+                server.quit()
+
 
 #TODO add diffrent from value
-#TODO add email notification when target price hit
 @views.route('/', methods=['GET', 'POST'])
 @login_required
 def home():
     stock_info = None
+    email_notification()
     if request.method == 'POST':
         symbol = request.form.get('symbol').upper()
         stock_info, error = fetch_stock_info(symbol)
@@ -331,6 +368,7 @@ def show_calculations(symbol):
                 if stock.symbol == symbol:
                     exists = True
                     stock.price_target = buy_price
+                    stock.notified = False
             if exists == False:
                 add_stock_to_watchlist(symbol, current_user, current_price, buy_price)
             flash(f'Target price added successfully!', 'success')
