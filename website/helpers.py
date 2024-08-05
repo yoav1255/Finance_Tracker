@@ -1,4 +1,3 @@
-
 import random
 
 
@@ -8,16 +7,21 @@ def determine_style(gain_or_loss_percentage):
     else:
         return "color: red;"
 
+
 def calculate_future_value(initial_value, growth_rate, num_years):
     future_value = initial_value * (1 + growth_rate) ** num_years
     return future_value
 
-def calculate_intrinsic_value(ev_mktcap,current_revenue,revenue_growth_rate,metric,metric_margin,ratio,ror,num_of_years,shares_outstanding,shares_growth):
+
+def calculate_intrinsic_value(ev_mktcap, current_revenue, revenue_growth_rate, metric, metric_margin, ratio, ror,
+                              num_of_years, shares_outstanding, shares_growth):
     ending_value = current_revenue * (1 + revenue_growth_rate) ** num_of_years
     shares_ending = shares_outstanding * (1 + shares_growth) ** num_of_years
-    fair_value = ((ending_value * metric_margin * ratio) / shares_ending) * ((1 / (1+ror) ) ** num_of_years)
+    future_metric_value = ending_value * metric_margin
+    fair_value = (future_metric_value * ratio) / shares_ending
+    present_value = fair_value * ((1 / (1 + ror)) ** num_of_years)
 
-    return fair_value
+    return round(present_value, 2)
 
 
 def calculate_annual_growth_rate(initial_value, end_value, num_years):
@@ -26,7 +30,8 @@ def calculate_annual_growth_rate(initial_value, end_value, num_years):
 
     growth_rate = ((end_value / initial_value) ** (1 / num_years)) - 1
     annual_growth_rate_percentage = growth_rate * 100
-    return round(annual_growth_rate_percentage,2)
+    return round(annual_growth_rate_percentage, 2)
+
 
 def get_random_color():
     # Generate a random color in hexadecimal format
@@ -36,4 +41,3 @@ def get_random_color():
         random.randint(0, 255)
     )
     return color
-
