@@ -67,6 +67,32 @@ def add_stock_to_watchlist(symbol, current_price, price_target=0):
     flash("Stock added successfully to your watchlist", category="success")
 
 
+def update_allocation():
+    total_value = 0
+    initial_value = 0
+    stock_names = []
+    stock_allocations = []
+    colors = []
+
+    for stock in current_user.stocks_portfolio:
+        if stock.amount_stocks > 0:
+            print(stock.amount_stocks)
+            total_value += stock.current_price * stock.amount_stocks
+            initial_value += stock.average_price * stock.amount_stocks
+
+    initial_value = round(initial_value, 2)
+    total_value = round(total_value, 2)
+
+    for stock in current_user.stocks_portfolio:
+        if stock.amount_stocks > 0:
+            stock_names.append(stock.symbol)
+            alloc = round(((stock.amount_stocks * stock.current_price) / total_value) * 100, 2)
+            stock_allocations.append(alloc)
+            colors.append(get_random_color())
+
+    return stock_names, stock_allocations, colors,initial_value,total_value
+
+
 #TODO add diffrent from value
 #TODO add email notification when target price hit
 @views.route('/', methods=['GET', 'POST'])
@@ -87,29 +113,10 @@ def home():
 @views.route('/portfolio', methods=['GET', 'POST'])
 @login_required
 def show_portfolio():
-    total_value = 0
-    initial_value = 0
-    stock_names = []
     stock_info = None
-    stock_allocations = []
-    colors = []
     i = 0
 
-    for stock in current_user.stocks_portfolio:
-        if stock.amount_stocks > 0:
-            print(stock.amount_stocks)
-            total_value += stock.current_price * stock.amount_stocks
-            initial_value += stock.average_price * stock.amount_stocks
-
-    initial_value = round(initial_value, 2)
-    total_value = round(total_value, 2)
-
-    for stock in current_user.stocks_portfolio:
-        if stock.amount_stocks > 0:
-            stock_names.append(stock.symbol)
-            alloc = round(((stock.amount_stocks * stock.current_price) / total_value) * 100, 2)
-            stock_allocations.append(alloc)
-            colors.append(get_random_color())
+    stock_names, stock_allocations, colors, initial_value, total_value = update_allocation()
 
     if request.method == 'POST':
         if 'add_to_portfolio_button' in request.form:
@@ -139,6 +146,7 @@ def show_portfolio():
                 stock = Portfolio.query.get(stock_id)
                 update_portfolio_stock(stock)
                 flash("Holding added successfully", category="success")
+                stock_names, stock_allocations, colors, initial_value, total_value = update_allocation()
 
     return render_template("portfolio.html", user=current_user, stock_info=stock_info,
                            total_value=total_value, initial_value=initial_value,
