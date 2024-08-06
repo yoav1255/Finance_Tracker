@@ -63,4 +63,5 @@ The Finance Tracker is a web application written in Python designed to provide f
 - **Home Page**: View and manage your watchlist.
 - **Stock Page**: View detailed information for a selected stock.
 - **Calculations Page**: Perform intrinsic value calculations and set your own price target.
+- **Portfolio Page**: Manage your portfolio holdings
 
