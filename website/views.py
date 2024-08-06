@@ -3,16 +3,12 @@ from flask_login import login_required, current_user
 
 from dotenv import load_dotenv
 import os
-import requests
 from . import db
-import yfinance as yf
 from .models import Watchlist, Portfolio, Holding
-import pandas as pd
 import matplotlib.pyplot as plt
 import requests
-from .helpers import determine_style, calculate_future_value, calculate_intrinsic_value, calculate_annual_growth_rate, \
+from .helpers import determine_style, calculate_intrinsic_value, calculate_annual_growth_rate, \
     get_random_color
-import numpy as np
 
 import smtplib
 from email.mime.multipart import MIMEMultipart
@@ -27,7 +23,6 @@ MAIL_PASSWORD = os.getenv('MAIL_PASSWORD')
 plt.style.use("ggplot")
 
 views = Blueprint('views', __name__)
-
 
 def update_portfolio_stock(stock):
     stock.average_price = 0
@@ -250,16 +245,17 @@ def show_stock(symbol):
             stock_info = requests.get(url).json()
 
         else:
-            url = f'https://financialmodelingprep.com/api/v3/income-statement/{symbol}?period=annual&apikey={FMP_API_KEY}'
-            url_profile = f'https://financialmodelingprep.com/api/v3/profile/{symbol}?apikey={FMP_API_KEY}'
-            url_key_metrics = f'https://financialmodelingprep.com/api/v3/key-metrics-ttm/{symbol}?apikey={FMP_API_KEY}'
-            url_ratios = f'https://financialmodelingprep.com/api/v3/ratios-ttm/{symbol}?apikey={FMP_API_KEY}'
-            stock_info = requests.get(url).json()[0]
-            profile = requests.get(url_profile).json()[0]
-            key_metrics = requests.get(url_key_metrics).json()[0]
-            ratios = requests.get(url_ratios).json()[0]
-            print(stock_info)
+            urls = [
+                f'https://financialmodelingprep.com/api/v3/income-statement/{symbol}?period=annual&apikey={FMP_API_KEY}',
+                f'https://financialmodelingprep.com/api/v3/profile/{symbol}?apikey={FMP_API_KEY}',
+                f'https://financialmodelingprep.com/api/v3/key-metrics-ttm/{symbol}?apikey={FMP_API_KEY}',
+                f'https://financialmodelingprep.com/api/v3/ratios-ttm/{symbol}?apikey={FMP_API_KEY}'
+            ]
 
+            stock_info = requests.get(urls[0]).json()
+            profile = requests.get(urls[1]).json()[0]
+            key_metrics = requests.get(urls[2]).json()[0]
+            ratios = requests.get(urls[3]).json()[0]
 
     except requests.exceptions.HTTPError as e:
         print(f"HTTP Error: {e}")
@@ -276,18 +272,19 @@ def show_stock(symbol):
 @views.route('/stock/<symbol>/calculations', methods=['GET', 'POST'])
 @login_required
 def show_calculations(symbol):
-    #todo optimize the requests (cashing, batch requests....)
-    url_income = f'https://financialmodelingprep.com/api/v3/income-statement/{symbol}?period=yearly&apikey={FMP_API_KEY}'
-    url_balance = f'https://financialmodelingprep.com/api/v3/balance-sheet-statement/{symbol}?period=yearly&apikey={FMP_API_KEY}'
-    url_cash = f'https://financialmodelingprep.com/api/v3/cash-flow-statement/{symbol}?period=yearly&apikey={FMP_API_KEY}'
-    url_profile = f'https://financialmodelingprep.com/api/v3/profile/{symbol}?apikey={FMP_API_KEY}'
-    url_key_metrics = f'https://financialmodelingprep.com/api/v3/key-metrics-ttm/{symbol}?apikey={FMP_API_KEY}'
+    urls=[
+        f'https://financialmodelingprep.com/api/v3/income-statement/{symbol}?period=yearly&apikey={FMP_API_KEY}',
+        f'https://financialmodelingprep.com/api/v3/balance-sheet-statement/{symbol}?period=yearly&apikey={FMP_API_KEY}',
+        f'https://financialmodelingprep.com/api/v3/cash-flow-statement/{symbol}?period=yearly&apikey={FMP_API_KEY}',
+        f'https://financialmodelingprep.com/api/v3/profile/{symbol}?apikey={FMP_API_KEY}',
+        f'https://financialmodelingprep.com/api/v3/key-metrics-ttm/{symbol}?apikey={FMP_API_KEY}'
+    ]
 
-    income_statement = requests.get(url_income).json()
-    balance_statement = requests.get(url_balance).json()
-    cashflow_statement = requests.get(url_cash).json()
-    profile = requests.get(url_profile).json()[0]
-    key_metrics = requests.get(url_key_metrics).json()[0]
+    income_statement = requests.get(urls[0]).json()
+    balance_statement = requests.get(urls[1]).json()
+    cashflow_statement = requests.get(urls[2]).json()
+    profile = requests.get(urls[3]).json()[0]
+    key_metrics = requests.get(urls[4]).json()[0]
 
     current_price = 0
     incomes = []

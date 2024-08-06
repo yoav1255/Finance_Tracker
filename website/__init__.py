@@ -7,7 +7,6 @@ import requests_cache
 
 
 
-
 db = SQLAlchemy()
 DB_NAME = "database.db"
 

@@ -25,49 +25,49 @@
                 <div class="form-row">
                     <div class="form-group col-md-6">
                         <label for="revenueGrowthRate">Revenue Growth Rate (%)</label>
-                        <input type="number" class="form-control" id="revenueGrowthRate" name="revenueGrowthRate" step="0.01" value="{{ revenue_growth_rate | default('', true) }}">
+                        <input type="number" class="form-control" required id="revenueGrowthRate" name="revenueGrowthRate" step="0.01" value="{{ revenue_growth_rate | default('', true) }}">
                         <small class="form-text text-muted">last 5 years growth : {{revenue_growth_rate_percentage}}%</small>
                     </div>
                     <div class="form-group col-md-6">
                         <label for="ebitdaMargin">Ebitda Margin (%)</label>
-                        <input type="number" class="form-control" id="ebitdaMargin" name="ebitdaMargin" step="0.01" value="{{ ebitda_margin | default('', true) }}">
+                        <input type="number" class="form-control" required id="ebitdaMargin" name="ebitdaMargin" step="0.01" value="{{ ebitda_margin | default('', true) }}">
                         <small class="form-text text-muted">current margin : {{current_ebitda_margin}}%</small>
                     </div>
                 </div>
                 <div class="form-row">
                     <div class="form-group col-md-6">
                         <label for="netMargin">Net Margin (%)</label>
-                        <input type="number" class="form-control" id="netMargin" name="netMargin" step="0.01" value="{{ net_margin | default('', true) }}">
+                        <input type="number" class="form-control" required id="netMargin" name="netMargin" step="0.01" value="{{ net_margin | default('', true) }}">
                         <small class="form-text text-muted">current margin : {{current_net_margin}}%</small>
 
                     </div>
                     <div class="form-group col-md-6">
                         <label for="fcfMargin">FCF Margin (%)</label>
-                        <input type="number" class="form-control" id="fcfMargin" name="fcfMargin" step="0.01" value="{{ fcf_margin | default('', true) }}">
+                        <input type="number" class="form-control" required id="fcfMargin" name="fcfMargin" step="0.01" value="{{ fcf_margin | default('', true) }}">
                         <small class="form-text text-muted">current margin : {{current_fcf_margin}}%</small>
                     </div>
                 </div>
                 <div class="form-row">
                     <div class="form-group col-md-6">
                         <label for="futurePE">Future PE</label>
-                        <input type="number" class="form-control" id="futurePE" name="futurePE" step="0.01" value="{{ future_pe | default('', true) }}">
+                        <input type="number" class="form-control" required id="futurePE" name="futurePE" step="0.01" value="{{ future_pe | default('', true) }}">
                         <small class="form-text text-muted">current PE : {{current_pe}}</small>
                     </div>
                     <div class="form-group col-md-6">
                         <label for="futureEVEBITDA">Future EV/EBITDA</label>
-                        <input type="number" class="form-control" id="futureEVEBITDA" name="futureEVEBITDA" step="0.01" value="{{ future_ev_ebitda | default('', true) }}">
+                        <input type="number" class="form-control" required id="futureEVEBITDA" name="futureEVEBITDA" step="0.01" value="{{ future_ev_ebitda | default('', true) }}">
                         <small class="form-text text-muted">current EV/EBITDA : {{current_ev_to_ebitda}}</small>
                     </div>
                 </div>
                 <div class="form-row">
                     <div class="form-group col-md-6">
                         <label for="futurePFCF">Future P/FCF</label>
-                        <input type="number" class="form-control" id="futurePFCF" name="futurePFCF" step="0.01" value="{{ future_pfcf | default('', true) }}">
+                        <input type="number" class="form-control" required id="futurePFCF" name="futurePFCF" step="0.01" value="{{ future_pfcf | default('', true) }}">
                         <small class="form-text text-muted">current P/FCF : {{current_pfcf}}</small>
                     </div>
                     <div class="form-group col-md-6">
                         <label for="sharesGrowth">Shares Growth</label>
-                        <input type="number" class="form-control" id="sharesGrowth" name="sharesGrowth" step="0.01" value="{{ shares_growth | default('', true) }}">
+                        <input type="number" class="form-control" required id="sharesGrowth" name="sharesGrowth" step="0.01" value="{{ shares_growth | default('', true) }}">
                         <small class="form-text text-muted">last 5 years growth : {{shares_growth_rate_percentage}}%</small>
 
                     </div>
@@ -75,12 +75,12 @@
                 <div class="form-row">
                     <div class="form-group col-md-6">
                         <label for="returnRate">Rate of Return (%)</label>
-                        <input type="number" class="form-control" id="returnRate" name="returnRate" step="0.01" value="{{ ror | default('', true) }}">
+                        <input type="number" class="form-control" required id="returnRate" name="returnRate" step="0.01" value="{{ ror | default('', true) }}">
                         <small class="form-text text-muted"></small>
                     </div>
                     <div class="form-group col-md-6">
                         <label for="numOfYears">Number of Years</label>
-                        <input type="number" class="form-control" id="numOfYears" name="numOfYears" step="0.01" value="{{ num_of_years | default('', true) }}">
+                        <input type="number" class="form-control" required id="numOfYears" name="numOfYears" step="0.01" value="{{ num_of_years | default('', true) }}">
                         <small class="form-text text-muted"></small>
                     </div>
                 </div>
