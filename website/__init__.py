@@ -3,11 +3,13 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from os import path
 from flask_login import LoginManager
+import requests_cache
 
 
 
 db = SQLAlchemy()
 DB_NAME = "database.db"
+
 
 def create_app():
     app = Flask(__name__)
@@ -38,8 +40,9 @@ def create_app():
 def create_database(app):
     with app.app_context():
         if not path.exists('website/' + DB_NAME):
-            #db.drop_all()
+            # db.drop_all()
             db.create_all()
+            requests_cache.install_cache('stock_cache', backend='sqlite', expire_after=300)  # 5 minutes expiration
             print("Database Created!")
 
 

@@ -9,7 +9,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from sqlalchemy.orm import aliased
 
 
-class User(db.Model,UserMixin):
+class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(150), unique=True)
     password = db.Column(db.String(150))
@@ -19,28 +19,28 @@ class User(db.Model,UserMixin):
 
 
 class Watchlist(db.Model):
-    id = db.Column(db.Integer, primary_key = True)
-    symbol = db.Column(db.String(150), unique = True)
+    id = db.Column(db.Integer, primary_key=True)
+    symbol = db.Column(db.String(150))
     price = db.Column(db.Integer)
-    price_target = db.Column(db.Integer,default = 0)
+    price_target = db.Column(db.Integer, default=0)
+    notified = db.Column(db.Boolean, default=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    
+
+
 class Portfolio(db.Model):
-    id = db.Column(db.Integer, primary_key = True)
-    symbol = db.Column(db.String(150), unique = True)
+    id = db.Column(db.Integer, primary_key=True)
+    symbol = db.Column(db.String(150))
     current_price = db.Column(db.Integer)
     average_price = db.Column(db.Integer)
     amount_stocks = db.Column(db.Integer)
-    
+
     holdings = db.relationship('Holding')
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 
+
 class Holding(db.Model):
-    id = db.Column(db.Integer, primary_key = True)
+    id = db.Column(db.Integer, primary_key=True)
     amount_stocks = db.Column(db.Integer)
     purchased_price = db.Column(db.Integer)
-    purchased_date = db.Column(db.DateTime(timezone = True), default = datetime.now())
+    purchased_date = db.Column(db.DateTime(timezone=True), default=datetime.now())
     stock_id = db.Column(db.Integer, db.ForeignKey('portfolio.id'))
-
-
-

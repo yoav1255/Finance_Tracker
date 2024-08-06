@@ -3,25 +3,26 @@ from flask_login import login_required, current_user
 
 from dotenv import load_dotenv
 import os
-import requests
 from . import db
-import yfinance as yf
 from .models import Watchlist, Portfolio, Holding
-import pandas as pd
 import matplotlib.pyplot as plt
 import requests
-from .helpers import determine_style, calculate_future_value, calculate_intrinsic_value, calculate_annual_growth_rate, \
+from .helpers import determine_style, calculate_intrinsic_value, calculate_annual_growth_rate, \
     get_random_color
-import numpy as np
+
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+
 
 load_dotenv()
 FMP_API_KEY = os.getenv('FMP_API_KEY')
+MAIL_PASSWORD = os.getenv('MAIL_PASSWORD')
 
 #TODO enable smart search
 plt.style.use("ggplot")
 
 views = Blueprint('views', __name__)
-
 
 def update_portfolio_stock(stock):
     stock.average_price = 0
@@ -52,8 +53,8 @@ def fetch_stock_info(symbol):
     return stock_info, error
 
 
-def is_stock_in_watchlist(symbol, user, error):
-    for stock in user.stocks_watchlist:
+def is_stock_in_watchlist(symbol, error):
+    for stock in current_user.stocks_watchlist:
         if stock.symbol == symbol:
             flash(f' {symbol} already exists ', category="error")
             error = True
@@ -92,17 +93,47 @@ def update_allocation():
 
     return stock_names, stock_allocations, colors,initial_value,total_value
 
+def email_notification():
+    smtp_server = "smtp.gmail.com"
+    smtp_port = 587
+    sender_email = "yoav.mailsender@gmail.com"
+    password = MAIL_PASSWORD
+    receiver_email = f'{current_user.email}'
+    subject = 'Yoav Finance Tracker - Hitting Price Target'
+
+    for stock in current_user.stocks_watchlist:
+        if stock.price < stock.price_target and not stock.notified:
+
+            body = f'Price target alert {stock.price_target} for {stock.symbol}'
+            msg = MIMEMultipart()
+            msg['Subject'] = subject
+            msg['From'] = sender_email
+            msg['To'] = receiver_email
+            msg.attach(MIMEText(body, 'plain'))
+            try:
+                server = smtplib.SMTP(smtp_server, smtp_port)
+                server.starttls()
+                server.login(sender_email, password)
+                server.sendmail(sender_email, receiver_email, msg.as_string())
+                print(f'Email sent for {stock.symbol} with price target {stock.price_target} !')
+                stock.notified = True
+                db.session.commit()
+            except Exception as e:
+                print(e)
+            finally:
+                server.quit()
+
 
 #TODO add diffrent from value
-#TODO add email notification when target price hit
 @views.route('/', methods=['GET', 'POST'])
 @login_required
 def home():
     stock_info = None
+    email_notification()
     if request.method == 'POST':
         symbol = request.form.get('symbol').upper()
         stock_info, error = fetch_stock_info(symbol)
-        error = is_stock_in_watchlist(symbol, current_user, error)
+        error = is_stock_in_watchlist(symbol, error)
 
         if not error:
             add_stock_to_watchlist(symbol, stock_info['price'])
@@ -189,9 +220,7 @@ def delete_holding():
     return jsonify({})
 
 
-#todo handle stats, we need to url to fetch the data from
-#todo quarterly statements only for subscription
-#todo balance sheet and cash flow statements doesnt work
+#TODO quarterly statements only for subscription
 @views.route('/stock/<symbol>', methods=['GET', 'POST'])
 @login_required
 def show_stock(symbol):
@@ -204,25 +233,29 @@ def show_stock(symbol):
     profile = []
     key_metrics = []
     ratios = []
+    dcf = []
 
     if selected_statement == 'stats':
         stats = True
     try:
+        url_dcf = f'https://financialmodelingprep.com/api/v3/discounted-cash-flow/{symbol}?apikey={FMP_API_KEY}'
+        dcf = requests.get(url_dcf).json()[0]
         if not stats:
             url = f'https://financialmodelingprep.com/api/v3/{selected_statement}/{symbol}?period={selected_period}&apikey={FMP_API_KEY}'
             stock_info = requests.get(url).json()
 
         else:
-            url = f'https://financialmodelingprep.com/api/v3/income-statement/{symbol}?period=annual&apikey={FMP_API_KEY}'
-            url_profile = f'https://financialmodelingprep.com/api/v3/profile/{symbol}?apikey={FMP_API_KEY}'
-            url_key_metrics = f'https://financialmodelingprep.com/api/v3/key-metrics-ttm/{symbol}?apikey={FMP_API_KEY}'
-            url_ratios = f'https://financialmodelingprep.com/api/v3/ratios-ttm/{symbol}?apikey={FMP_API_KEY}'
-            stock_info = requests.get(url).json()[0]
-            profile = requests.get(url_profile).json()[0]
-            key_metrics = requests.get(url_key_metrics).json()[0]
-            ratios = requests.get(url_ratios).json()[0]
-            print(stock_info)
+            urls = [
+                f'https://financialmodelingprep.com/api/v3/income-statement/{symbol}?period=annual&apikey={FMP_API_KEY}',
+                f'https://financialmodelingprep.com/api/v3/profile/{symbol}?apikey={FMP_API_KEY}',
+                f'https://financialmodelingprep.com/api/v3/key-metrics-ttm/{symbol}?apikey={FMP_API_KEY}',
+                f'https://financialmodelingprep.com/api/v3/ratios-ttm/{symbol}?apikey={FMP_API_KEY}'
+            ]
 
+            stock_info = requests.get(urls[0]).json()
+            profile = requests.get(urls[1]).json()[0]
+            key_metrics = requests.get(urls[2]).json()[0]
+            ratios = requests.get(urls[3]).json()[0]
 
     except requests.exceptions.HTTPError as e:
         print(f"HTTP Error: {e}")
@@ -233,31 +266,34 @@ def show_stock(symbol):
     return render_template("stock-overview.html", user=current_user, symbol=symbol,
                            selected_statement=selected_statement, selected_period=selected_period,
                            stock_info=stock_info, stats=stats, num_periods=len(stock_info), ratios=ratios,
-                           profile=profile, key_metrics=key_metrics)
+                           profile=profile, key_metrics=key_metrics, dcf=dcf)
 
 
 @views.route('/stock/<symbol>/calculations', methods=['GET', 'POST'])
 @login_required
 def show_calculations(symbol):
-    #todo optimize the requests (cashing, batch requests....)
-    url_income = f'https://financialmodelingprep.com/api/v3/income-statement/{symbol}?period=yearly&apikey={FMP_API_KEY}'
-    url_balance = f'https://financialmodelingprep.com/api/v3/balance-sheet-statement/{symbol}?period=yearly&apikey={FMP_API_KEY}'
-    url_cash = f'https://financialmodelingprep.com/api/v3/cash-flow-statement/{symbol}?period=yearly&apikey={FMP_API_KEY}'
-    url_profile = f'https://financialmodelingprep.com/api/v3/profile/{symbol}?apikey={FMP_API_KEY}'
-    url_key_metrics = f'https://financialmodelingprep.com/api/v3/key-metrics-ttm/{symbol}?apikey={FMP_API_KEY}'
+    urls=[
+        f'https://financialmodelingprep.com/api/v3/income-statement/{symbol}?period=yearly&apikey={FMP_API_KEY}',
+        f'https://financialmodelingprep.com/api/v3/balance-sheet-statement/{symbol}?period=yearly&apikey={FMP_API_KEY}',
+        f'https://financialmodelingprep.com/api/v3/cash-flow-statement/{symbol}?period=yearly&apikey={FMP_API_KEY}',
+        f'https://financialmodelingprep.com/api/v3/profile/{symbol}?apikey={FMP_API_KEY}',
+        f'https://financialmodelingprep.com/api/v3/key-metrics-ttm/{symbol}?apikey={FMP_API_KEY}'
+    ]
 
-    income_statement = requests.get(url_income).json()
-    balance_statement = requests.get(url_balance).json()
-    cashflow_statement = requests.get(url_cash).json()
-    profile = requests.get(url_profile).json()[0]
-    key_metrics = requests.get(url_key_metrics).json()[0]
+    income_statement = requests.get(urls[0]).json()
+    balance_statement = requests.get(urls[1]).json()
+    cashflow_statement = requests.get(urls[2]).json()
+    profile = requests.get(urls[3]).json()[0]
+    key_metrics = requests.get(urls[4]).json()[0]
 
     current_price = 0
     incomes = []
-    periods = []
+    shares = []
     for i in range(len(income_statement)):
         incomes.append(income_statement[i]['revenue'])
+        shares.append(income_statement[i]['weightedAverageShsOut'])
     revenue_growth_rate_percentage = calculate_annual_growth_rate(incomes[len(incomes) - 1], incomes[0], len(incomes))
+    shares_growth_rate_percentage = calculate_annual_growth_rate(shares[len(shares) - 1], shares[0], len(shares))
 
     try:
         #financials
@@ -292,9 +328,9 @@ def show_calculations(symbol):
             net_margin = float(request.form.get("netMargin")) / 100
             fcf_margin = float(request.form.get("fcfMargin")) / 100
 
-            future_pe = int(request.form.get('futurePE'))
-            future_ev_ebitda = int(request.form.get('futureEVEBITDA'))
-            future_pfcf = int(request.form.get('futurePFCF'))
+            future_pe = float(request.form.get('futurePE'))
+            future_ev_ebitda = float(request.form.get('futureEVEBITDA'))
+            future_pfcf = float(request.form.get('futurePFCF'))
             shares_growth = float(request.form.get('sharesGrowth')) / 100
 
             ror = float(request.form.get('returnRate')) / 100
@@ -323,7 +359,7 @@ def show_calculations(symbol):
                                    current_net_margin=round(current_net_margin * 100, 2),
                                    current_ebitda_margin=round(current_ebitda_margin * 100, 2),
                                    current_fcf_margin=round(current_fcf_margin * 100, 2),
-                                   revenue_growth_rate_percentage=revenue_growth_rate_percentage)
+                                   revenue_growth_rate_percentage=revenue_growth_rate_percentage, shares_growth_rate_percentage=shares_growth_rate_percentage)
         elif 'add_price' in request.form:
             exists = False
             buy_price = int(request.form.get('buyPrice'))
@@ -331,6 +367,7 @@ def show_calculations(symbol):
                 if stock.symbol == symbol:
                     exists = True
                     stock.price_target = buy_price
+                    stock.notified = False
             if exists == False:
                 add_stock_to_watchlist(symbol, current_user, current_price, buy_price)
             flash(f'Target price added successfully!', 'success')
@@ -342,4 +379,5 @@ def show_calculations(symbol):
                            current_net_margin=round(current_net_margin * 100, 2),
                            current_ebitda_margin=round(current_ebitda_margin * 100, 2),
                            current_fcf_margin=round(current_fcf_margin * 100, 2),
-                           revenue_growth_rate_percentage=revenue_growth_rate_percentage)
+                           revenue_growth_rate_percentage=revenue_growth_rate_percentage,
+                           shares_growth_rate_percentage=shares_growth_rate_percentage)
