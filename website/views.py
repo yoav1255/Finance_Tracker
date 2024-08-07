@@ -17,9 +17,9 @@ from email.mime.text import MIMEText
 
 load_dotenv()
 FMP_API_KEY = os.getenv('FMP_API_KEY')
+MAIL_USERNAME = os.getenv('MAIL_USERNAME')
 MAIL_PASSWORD = os.getenv('MAIL_PASSWORD')
 
-#TODO enable smart search
 plt.style.use("ggplot")
 
 views = Blueprint('views', __name__)
@@ -96,7 +96,7 @@ def update_allocation():
 def email_notification():
     smtp_server = "smtp.gmail.com"
     smtp_port = 587
-    sender_email = "yoav.mailsender@gmail.com"
+    sender_email = MAIL_USERNAME
     password = MAIL_PASSWORD
     receiver_email = f'{current_user.email}'
     subject = 'Yoav Finance Tracker - Hitting Price Target'

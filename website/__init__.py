@@ -35,6 +35,8 @@ def create_app():
     def load_user(id):
         return User.query.get(int(id))
 
+    app.jinja_env.filters['format_number'] = format_number
+
     return app
 
 def create_database(app):
@@ -46,5 +48,18 @@ def create_database(app):
             print("Database Created!")
 
 
-
-
+def format_number(value):
+    try:
+        value = float(value)
+        if value>1_000_000_000_000 or value<-1_000_000_000_000:
+            return f'{value/1_000_000_000_000:.2f} T'
+        elif value>1_000_000_000 or value<1_000_000_000:
+            return f'{value/1_000_000_000:.2f} B'
+        elif value>1_000_000 or value<1_000_000:
+            return f'{value/1_000_000:.2f} M'
+        elif value>1_000 or value<1_000:
+            return f'{value/1_000:.2f} K'
+        else:
+            return value
+    except (ValueError, TypeError):
+        return value

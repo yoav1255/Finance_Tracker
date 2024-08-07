@@ -34,7 +34,11 @@
                                 <a class="col list-group-item list-group-item-action" href="/stock/{{stock.symbol}}">{{stock.symbol}}</a>
                             </div>
                             <div class="col"> {{stock.price | round(2)}}$ </div>
-                            <div class="col"> Price Target : {{stock.price_target}}</div>
+                            {% if stock.price_target>0 %}
+                                <div class="col"> Price Target : {{stock.price_target}}</div>
+                            {% else %}
+                                <div class="col"></div>
+                            {% endif %}
                             <button type="button" class="close" onClick="deleteWatchlist({{ stock.id }})">
                                 <span aria-hidden="true">&times;</span>
                             </button>

@@ -41,3 +41,5 @@ def get_random_color():
         random.randint(0, 255)
     )
     return color
+
+
